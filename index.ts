@@ -17,6 +17,10 @@ enum RawTile {
 interface Tile {
   color(g: CanvasRenderingContext2D): void;
   draw(g: CanvasRenderingContext2D, x: number, y: number): void;
+  moveHorizontal(dx: number): void;
+  moveVertical(dy: number): void;
+  isEdible(): boolean;
+  isPushable(): boolean;
   isAir(): boolean;
   isFlux(): boolean;
   isUnbreakable(): boolean;
@@ -34,6 +38,14 @@ interface Tile {
 class AirTile implements Tile {
   color(g: CanvasRenderingContext2D) {}
   draw(g: CanvasRenderingContext2D, x: number, y: number) {}
+  moveHorizontal(dx: number) {
+    moveToTile(playerx + dx, playery);
+  }
+  moveVertical(dy: number) {
+    moveToTile(playerx, playery + dy);
+  }
+  isEdible() { return this.isAir() || this.isFlux() };
+  isPushable() { return this.isBox() || this.isStone() };
   isAir() { return true };
   isFlux() { return false };
   isUnbreakable() { return false };
@@ -57,6 +69,14 @@ class FluxTile implements Tile {
     tile.color(g);
     g.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
   }
+  moveHorizontal(dx: number) {
+    moveToTile(playerx + dx, playery);
+  }
+  moveVertical(dy: number) {
+    moveToTile(playerx, playery + dy);
+  }
+  isEdible() { return this.isAir() || this.isFlux() };
+  isPushable() { return this.isBox() || this.isStone() };
   isAir() { return false };
   isFlux() { return true };
   isUnbreakable() { return false };
@@ -80,6 +100,10 @@ class UnbreakableTile implements Tile {
     tile.color(g);
     g.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
   }
+  moveHorizontal(dx: number) {}
+  moveVertical(dy: number) {}
+  isEdible() { return this.isAir() || this.isFlux() };
+  isPushable() { return this.isBox() || this.isStone() };
   isAir() { return false };
   isFlux() { return false };
   isUnbreakable() { return true };
@@ -97,6 +121,10 @@ class UnbreakableTile implements Tile {
 class PlayerTile implements Tile {
   color(g: CanvasRenderingContext2D) {}
   draw(g: CanvasRenderingContext2D, x: number, y: number) {}
+  moveHorizontal(dx: number) {}
+  moveVertical(dy: number) {}
+  isEdible() { return this.isAir() || this.isFlux() };
+  isPushable() { return this.isBox() || this.isStone() };
   isAir() { return false };
   isFlux() { return false };
   isUnbreakable() { return false };
@@ -120,6 +148,16 @@ class StoneTile implements Tile {
     tile.color(g);
     g.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
   }
+  moveHorizontal(dx: number) {
+    if (map[playery][playerx + dx + dx].isAir()
+      && !map[playery + 1][playerx + dx].isAir()) {
+      map[playery][playerx + dx + dx] = map[playery][playerx + dx];
+      moveToTile(playerx + dx, playery);
+    }
+  }
+  moveVertical(dy: number) {}
+  isEdible() { return this.isAir() || this.isFlux() };
+  isPushable() { return this.isBox() || this.isStone() };
   isAir() { return false };
   isFlux() { return false };
   isUnbreakable() { return false };
@@ -143,6 +181,10 @@ class FallingStoneTile implements Tile {
     tile.color(g);
     g.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
   }
+  moveHorizontal(dx: number) {}
+  moveVertical(dy: number) {}
+  isEdible() { return this.isAir() || this.isFlux() };
+  isPushable() { return this.isBox() || this.isStone() };
   isAir() { return false };
   isFlux() { return false };
   isUnbreakable() { return false };
@@ -166,6 +208,16 @@ class BoxTile implements Tile {
     tile.color(g);
     g.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
   }
+  moveHorizontal(dx: number) {
+    if (map[playery][playerx + dx + dx].isAir()
+      && !map[playery + 1][playerx + dx].isAir()) {
+      map[playery][playerx + dx + dx] = map[playery][playerx + dx];
+      moveToTile(playerx + dx, playery);
+    }
+  }
+  moveVertical(dy: number) {}
+  isEdible() { return this.isAir() || this.isFlux() };
+  isPushable() { return this.isBox() || this.isStone() };
   isAir() { return false };
   isFlux() { return false };
   isUnbreakable() { return false };
@@ -189,6 +241,10 @@ class FallingBoxTile implements Tile {
     tile.color(g);
     g.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
   }
+  moveHorizontal(dx: number) {}
+  moveVertical(dy: number) {}
+  isEdible() { return this.isAir() || this.isFlux() };
+  isPushable() { return this.isBox() || this.isStone() };
   isAir() { return false };
   isFlux() { return false };
   isUnbreakable() { return false };
@@ -212,6 +268,16 @@ class Key1Tile implements Tile {
     tile.color(g);
     g.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
   }
+  moveHorizontal(dx: number) {
+    removeLock1();
+    moveToTile(playerx + dx, playery);
+  }
+  moveVertical(dy: number) {
+    removeLock1();
+    moveToTile(playerx, playery + dy);
+  }
+  isEdible() { return this.isAir() || this.isFlux() };
+  isPushable() { return this.isBox() || this.isStone() };
   isAir() { return false };
   isFlux() { return false };
   isUnbreakable() { return false };
@@ -235,6 +301,10 @@ class Lock1Tile implements Tile {
     tile.color(g);
     g.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
   }
+  moveHorizontal(dx: number) {}
+  moveVertical(dy: number) {}
+  isEdible() { return this.isAir() || this.isFlux() };
+  isPushable() { return this.isBox() || this.isStone() };
   isAir() { return false };
   isFlux() { return false };
   isUnbreakable() { return false };
@@ -258,6 +328,16 @@ class Key2Tile implements Tile {
     tile.color(g);
     g.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
   }
+  moveHorizontal(dx: number) {
+    removeLock2();
+    moveToTile(playerx + dx, playery);
+  }
+  moveVertical(dy: number) {
+    removeLock2();
+    moveToTile(playerx, playery + dy);
+  }
+  isEdible() { return this.isAir() || this.isFlux() };
+  isPushable() { return this.isBox() || this.isStone() };
   isAir() { return false };
   isFlux() { return false };
   isUnbreakable() { return false };
@@ -281,6 +361,10 @@ class Lock2Tile implements Tile {
     tile.color(g);
     g.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
   }
+  moveHorizontal(dx: number) {}
+  moveVertical(dy: number) {}
+  isEdible() { return this.isAir() || this.isFlux() };
+  isPushable() { return this.isBox() || this.isStone() };
   isAir() { return false };
   isFlux() { return false };
   isUnbreakable() { return false };
@@ -300,19 +384,19 @@ interface Input {
 }
 
 class InputLeft implements Input {
-  handle() { moveHorizontal(-1) }
+  handle() { map[playery][playerx - 1].moveHorizontal(-1) }
 }
 
 class InputRight implements Input {
-  handle() { moveHorizontal(1) }
+  handle() { map[playery][playerx + 1].moveHorizontal(1) }
 }
 
 class InputUp implements Input {
-  handle() { moveVertical(-1) }
+  handle() { map[playery - 1][playerx].moveVertical(-1) }
 }
 
 class InputDown implements Input {
-  handle() { moveVertical(1) }
+  handle() {map[playery + 1][playerx].moveVertical(1) }
 }
 
 let playerx = 1;
@@ -387,38 +471,6 @@ function moveToTile(newx: number, newy: number) {
   map[newy][newx] = new PlayerTile();
   playerx = newx;
   playery = newy;
-}
-
-function moveHorizontal(dx: number) {
-  if (map[playery][playerx + dx].isFlux()
-    || map[playery][playerx + dx].isAir()) {
-    moveToTile(playerx + dx, playery);
-  } else if ((map[playery][playerx + dx].isStone()
-    || map[playery][playerx + dx].isBox())
-    && map[playery][playerx + dx + dx].isAir()
-    && !map[playery + 1][playerx + dx].isAir()) {
-    map[playery][playerx + dx + dx] = map[playery][playerx + dx];
-    moveToTile(playerx + dx, playery);
-  } else if (map[playery][playerx + dx].isKey1()) {
-    removeLock1();
-    moveToTile(playerx + dx, playery);
-  } else if (map[playery][playerx + dx].isKey2()) {
-    removeLock2();
-    moveToTile(playerx + dx, playery);
-  }
-}
-
-function moveVertical(dy: number) {
-  if (map[playery + dy][playerx].isFlux()
-    || map[playery + dy][playerx].isAir()) {
-    moveToTile(playerx, playery + dy);
-  } else if (map[playery + dy][playerx].isKey1()) {
-    removeLock1();
-    moveToTile(playerx, playery + dy);
-  } else if (map[playery + dy][playerx].isKey2()) {
-    removeLock2();
-    moveToTile(playerx, playery + dy);
-  }
 }
 
 function update() {
